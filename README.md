@@ -1,70 +1,108 @@
-# Getting Started with Create React App
+## React Wetter App
+1. API-Registrierung
+Wir müssen uns erstmal bei einer Wetter-API registrieren. Ich habe mich für https://weatherstack.com/ entschieden. Dort loggst du dich einfach ein, und generierst einen API-Schlüssel
+2. Projekt erstellen
+```
+npx create-react-app weather-app
+cd weather-app
+```
+3. App.js Komponente erstellen
+```
+import React, { useState, useEffect } from 'react';
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+const API_KEY = process.env.REACT_APP_API_KEY;
 
-In the project directory, you can run:
+function App() {
+  const [weather, setWeather] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [city, setCity] = useState('');
 
-### `npm start`
+  const fetchWeatherData = async (lat, lon) => {
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+      );
+      if (!response.ok) throw new Error('Fehler beim Abrufen der Wetterdaten');
+      const data = await response.json();
+      setWeather(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+  useEffect(() => {
+    const loadWeatherByLocation = () => {
+      setLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          await fetchWeatherData(latitude, longitude);
+        },
+        (err) => {
+          console.error(err); 
+          setError(`Fehlercode: ${err.code}, Nachricht: ${err.message}`);
+          setLoading(false);
+        }
+      );
+    };
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+    loadWeatherByLocation();
+  }, []);
 
-### `npm test`
+  const handleCityInputChange = (e) => setCity(e.target.value);
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
+      );
+      if (!response.ok) throw new Error('Stadt nicht gefunden');
+      const data = await response.json();
+      setWeather(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-### `npm run build`
+  return (
+    <div className="container">
+      <h1>Weather App</h1>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Enter city name"
+          value={city}
+          onChange={handleCityInputChange}
+        />
+        <button type="submit">Search</button>
+      </form>
+      {loading && <p>Loading...</p>}
+      {error && <p>{error}</p>}
+      {weather && (
+        <div>
+          <h2>{weather.name}</h2>
+          <p>Temperature: {weather.main.temp}°C</p>
+          <p>Description: {weather.weather[0].description}</p>
+          <p>Wind Speed: {weather.wind.speed} m/s</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+export default App;
+```
+4. .env Datei erstellen
+```
+REACT_APP_API_KEY='Dein KEy'
+```
+Achtung: Wenn wir Umgebungsvariablen in React einbinden, dann muss die Variable immer mit REACT_APP beginnen. Das dotenv-Paket wird automatisch beim Initialisieren des Projekts installiert.
