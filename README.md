@@ -1,6 +1,6 @@
 ## React Wetter App
 1. API-Registrierung
-Wir müssen uns erstmal bei einer Wetter-API registrieren. Ich habe mich für https://weatherstack.com/ entschieden. Dort loggst du dich einfach ein, und generierst einen API-Schlüssel
+Wir müssen uns erstmal bei einer Wetter-API registrieren. Ich habe mich für https://openweathermap.org/ entschieden. Dort loggst du dich einfach ein, und generierst einen API-Schlüssel
 2. Projekt erstellen
 ```
 npx create-react-app weather-app
